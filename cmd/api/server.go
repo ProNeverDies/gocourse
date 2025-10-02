@@ -1,10 +1,10 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 )
 
 type user struct {
@@ -85,32 +85,32 @@ func teacherHandler(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	w.Write([]byte("Hello Teachers Route"))
+	// w.Write([]byte("Hello Teachers Route"))
 
-	fmt.Printf(r.Method) //http method which is sent to the route
+	// fmt.Printf(r.Method) //http method which is sent to the route
 }
 
 func studentHandler(w http.ResponseWriter, r *http.Request) {
 	// fmt.Fprintf(w, "Hello students Route")
 	switch r.Method {
 	case http.MethodGet:
-		fmt.Println(r.URL.Path)
-		path := strings.TrimPrefix(r.URL.Path, "/students/")
-		userID := strings.TrimSuffix(path, "/")
+		// fmt.Println(r.URL.Path)
+		// path := strings.TrimPrefix(r.URL.Path, "/students/")
+		// userID := strings.TrimSuffix(path, "/")
 
-		fmt.Println("User ID", userID)
+		// fmt.Println("User ID", userID)
 
-		fmt.Println("User Query", r.URL.Query())
-		queryParams := r.URL.Query()
+		// fmt.Println("User Query", r.URL.Query())
+		// queryParams := r.URL.Query()
 
-		sortby := queryParams.Get("sortby")
-		key := queryParams.Get("key")
-		sortorder := queryParams.Get("sortorder")
+		// sortby := queryParams.Get("sortby")
+		// key := queryParams.Get("key")
+		// sortorder := queryParams.Get("sortorder")
 
-		if sortorder == "" {
-			sortorder = "desc"
-		}
-		fmt.Printf("Sortby: %s, Key: %s, Sortorder: %s\n", sortby, key, sortorder)
+		// if sortorder == "" {
+		// 	sortorder = "desc"
+		// }
+		// fmt.Printf("Sortby: %s, Key: %s, Sortorder: %s\n", sortby, key, sortorder)
 		w.Write([]byte("Hello GET method on students route"))
 		fmt.Println("Hello GET method on students route")
 	case http.MethodPost:
@@ -126,7 +126,7 @@ func studentHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello Delete method on students route"))
 		fmt.Println("Hello Delete method on students route")
 	}
-	w.Write([]byte("Hello students Route"))
+	// w.Write([]byte("Hello students Route"))
 }
 
 func execsHandler(w http.ResponseWriter, r *http.Request) {
@@ -148,23 +148,53 @@ func execsHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello Delete method on execs route"))
 		fmt.Println("Hello Delete method on execs route")
 	}
-	w.Write([]byte("Hello execs Route"))
+	// w.Write([]byte("Hello execs Route"))
 }
 
 func main() {
-	port := 3000
+	port := ":3000"
 
-	http.HandleFunc("/", rootHandler)
+	cert := "cert.pem"
 
-	http.HandleFunc("/teachers", teacherHandler)
+	key := "key.pem"
 
-	http.HandleFunc("/students", studentHandler)
+	mux := http.NewServeMux() //helps us to use multiple api routes where each route can have their handler func
 
-	http.HandleFunc("/execs", execsHandler)
+	mux.HandleFunc("/", rootHandler)
 
-	fmt.Printf("Server is running on port %d\n", port)
-	err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+	mux.HandleFunc("/teachers", teacherHandler)
 
+	mux.HandleFunc("/students", studentHandler)
+
+	mux.HandleFunc("/execs", execsHandler)
+
+	// http.HandleFunc("/", rootHandler)
+
+	// http.HandleFunc("/teachers", teacherHandler)
+
+	// http.HandleFunc("/students", studentHandler)
+
+	// http.HandleFunc("/execs", execsHandler)
+
+	tlsconfig := &tls.Config{
+		MinVersion: tls.VersionTLS12,
+	}
+
+	server := http.Server{
+		Addr:      port,
+		Handler:   mux,
+		TLSConfig: tlsconfig,
+	}
+
+	// server := http.Server{
+	// 	Addr:      port,
+	// 	Handler:   nil,
+	// 	TLSConfig: tlsconfig,
+	// }
+
+	fmt.Printf("Server is running on port %v\n", port)
+	// err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+	err := server.ListenAndServeTLS(cert, key)
 	if err != nil {
 		log.Fatal("Error Starting the server", err)
 	}
