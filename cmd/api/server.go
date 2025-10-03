@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"gocourse/internal/api/middlewares"
 	"log"
 	"net/http"
 )
@@ -13,6 +14,7 @@ type user struct {
 	Age  int    `json:"age"`
 }
 
+// Handler Function
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	// fmt.Fprintf(w, "Hello Root Route")
 	w.Write([]byte("Hello Root Route"))
@@ -181,8 +183,9 @@ func main() {
 	}
 
 	server := http.Server{
-		Addr:      port,
-		Handler:   mux,
+		Addr:    port,
+		Handler: middlewares.SecurityHandlers(mux),
+		// Handler:mux,
 		TLSConfig: tlsconfig,
 	}
 
