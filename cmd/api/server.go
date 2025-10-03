@@ -184,7 +184,7 @@ func main() {
 
 	server := http.Server{
 		Addr:    port,
-		Handler: mw.Cors(mw.SecurityHandlers(mux)),
+		Handler: mw.ResponseTimeMiddleware(mw.Cors(mw.SecurityHandlers(mux))),
 		// Handler: mw.Cors(mux),
 		// Handler: middlewares.SecurityHandlers(mux),1
 		// Handler:mux,
