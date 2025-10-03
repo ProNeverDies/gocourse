@@ -3,7 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
-	"gocourse/internal/api/middlewares"
+	mw "gocourse/internal/api/middlewares"
 	"log"
 	"net/http"
 )
@@ -184,7 +184,9 @@ func main() {
 
 	server := http.Server{
 		Addr:    port,
-		Handler: middlewares.SecurityHandlers(mux),
+		Handler: mw.Cors(mw.SecurityHandlers(mux)),
+		// Handler: mw.Cors(mux),
+		// Handler: middlewares.SecurityHandlers(mux),1
 		// Handler:mux,
 		TLSConfig: tlsconfig,
 	}
