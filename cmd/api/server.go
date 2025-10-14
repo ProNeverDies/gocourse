@@ -6,6 +6,7 @@ import (
 	mw "gocourse/internal/api/middlewares"
 	"log"
 	"net/http"
+	"time"
 )
 
 type user struct {
@@ -138,6 +139,15 @@ func execsHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello GET method on execs route"))
 		fmt.Println("Hello GET method on execs route")
 	case http.MethodPost:
+		fmt.Println("Query Params:", r.URL.Query())
+		fmt.Println("Query Params:", r.URL.Query().Get("name"))
+
+		err := r.ParseForm()
+		if err != nil {
+			return
+		}
+		fmt.Println("Form Data:", r.Form)
+
 		w.Write([]byte("Hello Post method on execs route"))
 		fmt.Println("Hello Post method on execs route")
 	case http.MethodPut:
@@ -181,10 +191,11 @@ func main() {
 	tlsconfig := &tls.Config{
 		MinVersion: tls.VersionTLS12,
 	}
+	rl := mw.NewRateLimiter(5, 1*time.Minute)
 
 	server := http.Server{
 		Addr:    port,
-		Handler: mw.Compression(mw.ResponseTimeMiddleware(mw.Cors(mw.SecurityHandlers(mux)))),
+		Handler: rl.Middleware(mw.Compression(mw.ResponseTimeMiddleware(mw.Cors(mw.SecurityHandlers(mux))))),
 		// Handler: mw.Cors(mux),
 		// Handler: middlewares.SecurityHandlers(mux),1
 		// Handler:mux,
