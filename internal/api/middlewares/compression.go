@@ -8,10 +8,11 @@ import (
 )
 
 func Compression(next http.Handler) http.Handler {
+	fmt.Println("Compression Middleware...")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// The response write method by deafult will not compress and send the header that why we have to use gzip Response Writer
 		//Check if the client accepts the gunzip encoding
-
+		fmt.Println("Compression Middleware being returned...")
 		if !strings.Contains(r.Header.Get("Accept-encoding"), "gzip") {
 			next.ServeHTTP(w, r)
 		}

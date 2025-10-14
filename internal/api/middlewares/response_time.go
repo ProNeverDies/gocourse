@@ -7,7 +7,10 @@ import (
 )
 
 func ResponseTimeMiddleware(next http.Handler) http.Handler {
+	fmt.Println("Rate Limiting Middleware...")
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Rate Limiting Middleware returned...")
 		fmt.Println("Recieved Request in Response Time")
 		start := time.Now()
 

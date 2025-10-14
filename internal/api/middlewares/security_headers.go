@@ -1,8 +1,13 @@
 package middlewares
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 func SecurityHandlers(next http.Handler) http.Handler {
+	fmt.Println("Security Middleware returned...")
+	fmt.Println("Security Middleware returned...")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("X-DNS-Prefetch-Control", "off")                                            //Prevent DNS prefetching in background
