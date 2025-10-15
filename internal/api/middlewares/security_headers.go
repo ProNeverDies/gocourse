@@ -6,10 +6,10 @@ import (
 )
 
 func SecurityHandlers(next http.Handler) http.Handler {
-	fmt.Println("Security Middleware returned...")
-	fmt.Println("Security Middleware returned...")
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Security Middleware ...")
 
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Security Middleware returned...")
 		w.Header().Set("X-DNS-Prefetch-Control", "off")                                            //Prevent DNS prefetching in background
 		w.Header().Set("X-Frame-Options", "DENY")                                                  //Defense Agaisnt Clickjacking (embedd iframes)
 		w.Header().Set("X-XSS-Protection", "1; mode=block")                                        //Cross Site Scripting Protection
