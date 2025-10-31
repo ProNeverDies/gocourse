@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"gocourse/internal/models"
@@ -111,6 +112,13 @@ func TeacherHandler(w http.ResponseWriter, r *http.Request) {
 
 func getTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
+	db, err := sqlconnect.ConnectDb()
+	if err != nil {
+		http.Error(w, "Database connection error", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
 	path := strings.TrimPrefix(r.URL.Path, "/teachers/")
 	idStr := strings.TrimSuffix(path, "/")
 	// fmt.Println("IDStr", idStr)
@@ -155,12 +163,22 @@ func getTeachersHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid teacher ID", http.StatusBadRequest)
 		return
 	}
-	teacher, exists := teachers[id]
-	if !exists {
+	// teacher, exists := teachers[id]
+	// if !exists {
+	// 	http.Error(w, "Teacher not found", http.StatusNotFound)
+	// 	return
+	// }
+
+	var teacher models.Teacher
+
+	err = db.QueryRow("SELECT id,first_name,last_name,email,class,subject from teachers where id = ?", id).Scan(&teacher.ID, &teacher.FirstName, &teacher.LastName, &teacher.Email, &teacher.Class, &teacher.Subject)
+	if err == sql.ErrNoRows {
 		http.Error(w, "Teacher not found", http.StatusNotFound)
 		return
+	} else if err != nil {
+		http.Error(w, "Database Query Error", http.StatusNotFound)
+		return
 	}
-
 	// FIX: Set Content-Type header before sending response.
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(teacher)
