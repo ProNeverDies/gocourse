@@ -127,20 +127,51 @@ func getTeachersHandler(w http.ResponseWriter, r *http.Request) {
 	if idStr == "" {
 		firstName := r.URL.Query().Get("first_name")
 		lastName := r.URL.Query().Get("last_name")
-		teacherList := make([]models.Teacher, 0, len(teachers))
+
+		query := "SELECT id,first_name,last_name,email,class,subject from teachers WHERE 1=1"
+		var args []interface{}
+
+		if firstName != "" {
+			query += " AND first_name = ?"
+			args = append(args, firstName)
+		}
+		if lastName != "" {
+			query += " AND first_name = ?"
+			args = append(args, lastName)
+		}
+
+		rows, err := db.Query(query, args...)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Database Query Error", http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+		teacherList := make([]models.Teacher, 0)
+
+		for rows.Next() {
+			var teacher models.Teacher
+			err := rows.Scan(&teacher.ID, &teacher.FirstName, &teacher.LastName, &teacher.Email, &teacher.Class, &teacher.Subject)
+			if err != nil {
+				fmt.Println(err)
+				http.Error(w, "Database Scan Error", http.StatusInternalServerError)
+				return
+			}
+			teacherList = append(teacherList, teacher)
+		}
 
 		// FIX: Corrected filtering logic.
-		for _, v := range teachers {
-			// If no filters are provided, include everyone.
-			if firstName == "" && lastName == "" {
-				teacherList = append(teacherList, v)
-				continue
-			}
-			// If filters are provided, match them.
-			if (firstName != "" && v.FirstName == firstName) || (lastName != "" && v.LastName == lastName) {
-				teacherList = append(teacherList, v)
-			}
-		}
+		// for _, v := range teachers {
+		// 	// If no filters are provided, include everyone.
+		// 	if firstName == "" && lastName == "" {
+		// 		teacherList = append(teacherList, v)
+		// 		continue
+		// 	}
+		// 	// If filters are provided, match them.
+		// 	if (firstName != "" && v.FirstName == firstName) || (lastName != "" && v.LastName == lastName) {
+		// 		teacherList = append(teacherList, v)
+		// 	}
+		// }
 		response := struct {
 			Status string           `json:"status"`
 			Count  int              `json:"count"`
