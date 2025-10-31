@@ -5,8 +5,12 @@ import (
 	"fmt"
 	mw "gocourse/internal/api/middlewares"
 	"gocourse/internal/api/routes"
+	"gocourse/internal/repository/sqlconnect"
 	"log"
 	"net/http"
+	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type user struct {
@@ -16,7 +20,18 @@ type user struct {
 }
 
 func main() {
-	port := ":3000"
+	err := godotenv.Load("../../cmd/.env")
+	if err != nil {
+		fmt.Println("Error loading .env file")
+	}
+	_, err = sqlconnect.ConnectDb()
+
+	if err != nil {
+		log.Fatal("Database connection failed:", err)
+		return
+	}
+
+	port := os.Getenv("API_PORT")
 
 	cert := "cert.pem"
 
@@ -69,7 +84,7 @@ func main() {
 
 	fmt.Printf("Server is running on port %v\n", port)
 	// err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
-	err := server.ListenAndServeTLS(cert, key)
+	err = server.ListenAndServeTLS(cert, key)
 	if err != nil {
 		log.Fatal("Error Starting the server", err)
 	}
