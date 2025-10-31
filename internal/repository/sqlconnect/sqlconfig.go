@@ -20,7 +20,9 @@ func ConnectDb() (*sql.DB, error) {
 	dbname := os.Getenv("DB_NAME")
 	dbhost := os.Getenv("HOST")
 	dbport := os.Getenv("DB_PORT")
+	// connectionString := os.Getenv("CONNECTION_STRING")
 	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", user, password, dbhost, dbport, dbname)
+
 	db, err := sql.Open("mysql", connectionString)
 	if err != nil {
 		// panic(err)

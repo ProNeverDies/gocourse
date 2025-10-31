@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gocourse/internal/models"
+	"gocourse/internal/repository/sqlconnect"
 	"net/http"
 	"strconv"
 	"strings"
@@ -167,24 +168,52 @@ func getTeachersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func postTeacherHandler(w http.ResponseWriter, r *http.Request) {
-	mutex.Lock()
-	defer mutex.Unlock()
+	// mutex.Lock()
+	// defer mutex.Unlock()
+
+	db, err := sqlconnect.ConnectDb()
+	if err != nil {
+		http.Error(w, "Database connection error", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
 
 	var newTeachers []models.Teacher
+
 	// FIX: Must pass a pointer to the slice for the decoder to populate it.
-	err := json.NewDecoder(r.Body).Decode(&newTeachers)
+	err = json.NewDecoder(r.Body).Decode(&newTeachers)
 	if err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
+	stmt, err := db.Prepare("INSERT INTO teachers(first_name, last_name, email,class, subject) VALUES(?,?, ?, ?, ?)")
+	if err != nil {
+		http.Error(w, "Database statement preparation error", http.StatusInternalServerError)
+		return
+	}
+
+	defer stmt.Close()
+
 	addedTeachers := make([]models.Teacher, len(newTeachers))
 
 	for i, newteacher := range newTeachers {
-		newteacher.ID = netID
-		teachers[netID] = newteacher
+		res, err := stmt.Exec(newteacher.FirstName, newteacher.LastName, newteacher.Email, newteacher.Class, newteacher.Subject)
+		if err != nil {
+			http.Error(w, "Database insertion error", http.StatusInternalServerError)
+			return
+		}
+		lastID, err := res.LastInsertId()
+		if err != nil {
+			http.Error(w, "Database retrieval error", http.StatusInternalServerError)
+			return
+		}
+		newteacher.ID = int(lastID)
 		addedTeachers[i] = newteacher
-		netID++
+		// newteacher.ID = netID
+		// teachers[netID] = newteacher
+		// addedTeachers[i] = newteacher
+		// netID++
 	}
 
 	w.Header().Set("Content-Type", "application/json")
