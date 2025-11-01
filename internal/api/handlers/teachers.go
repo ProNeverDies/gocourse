@@ -93,8 +93,9 @@ func TeacherHandler(w http.ResponseWriter, r *http.Request) {
 		// w.Write([]byte("Hello Put method on teachers route"))
 		// fmt.Println("Hello Put method on teachers route")
 	case http.MethodPatch:
-		w.Write([]byte("Hello Patch method on teachers route"))
-		fmt.Println("Hello Patch method on teachers route")
+		patchTeacherHandler(w, r)
+		// w.Write([]byte("Hello Patch method on teachers route"))
+		// fmt.Println("Hello Patch method on teachers route")
 	case http.MethodDelete:
 		w.Write([]byte("Hello Delete method on teachers route"))
 		fmt.Println("Hello Delete method on teachers route")
@@ -401,4 +402,74 @@ func updateTeacherHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(updatedTeacher)
+}
+
+//Patch /teachers/{id}  Not updates all the fields only the fields that we recieve
+
+//Mtlb hum empty fields bhi pass kar sakte h during update
+
+func patchTeacherHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/teachers/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Invalid teacher ID", http.StatusBadRequest)
+		return
+	}
+
+	var updates map[string]interface{}
+
+	err = json.NewDecoder(r.Body).Decode(&updates)
+
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	db, err := sqlconnect.ConnectDb()
+	if err != nil {
+		http.Error(w, "Database connection error", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	var existingTeacher models.Teacher
+
+	err = db.QueryRow("Select id,first_name,last_name,email,class,subject from teachers where id = ?", id).Scan(&existingTeacher.ID, &existingTeacher.FirstName, &existingTeacher.LastName, &existingTeacher.Email, &existingTeacher.Class, &existingTeacher.Subject)
+	if err == sql.ErrNoRows {
+		http.Error(w, "Teacher not found", http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		http.Error(w, "Unable to retrieve data", http.StatusInternalServerError)
+		return
+	}
+
+	//APPLY UPDATES
+
+	for key, value := range updates {
+		switch key {
+		case "first_name":
+			existingTeacher.FirstName = value.(string)
+		case "last_name":
+			existingTeacher.LastName = value.(string)
+		case "email":
+			existingTeacher.Email = value.(string)
+		case "class":
+			existingTeacher.Class = value.(string)
+		case "subject":
+			existingTeacher.Subject = value.(string)
+		}
+	}
+
+	_, err = db.Exec("UPDATE teachers SET first_name = ?, last_name = ?, email = ?, class = ?, subject = ? WHERE id = ?", existingTeacher.FirstName, existingTeacher.LastName, existingTeacher.Email, existingTeacher.Class, existingTeacher.Subject, id)
+	if err != nil {
+		http.Error(w, "Error Updating Teacher", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(existingTeacher)
+
 }
