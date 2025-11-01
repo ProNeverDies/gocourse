@@ -110,6 +110,15 @@ func TeacherHandler(w http.ResponseWriter, r *http.Request) {
 	// fmt.Printf(r.Method) //http method which is sent to the route
 }
 
+func isValidSortOrder(order string) bool {
+	return order == "asc" || order == "desc"
+}
+
+func isValidSortField(field string) bool {
+	validFields := map[string]bool{"id": true, "first_name": true, "last_name": true, "email": true, "class": true, "subject": true}
+	return validFields[field]
+}
+
 func getTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sqlconnect.ConnectDb()
@@ -142,6 +151,9 @@ func getTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
 		query, args = addFilters(r, query, args)
 
+		// r.URL.Query().Get("sortby") 	will only get the first value if multiple are provided
+		query = addSorting(r, query)
+
 		rows, err := db.Query(query, args...)
 		if err != nil {
 			fmt.Println(err)
@@ -166,12 +178,12 @@ func getTeachersHandler(w http.ResponseWriter, r *http.Request) {
 		// for _, v := range teachers {
 		// 	// If no filters are provided, include everyone.
 		// 	if firstName == "" && lastName == "" {
-		// 		teacherList = append(teacherList, v)
-		// 		continue
+		// 		 teacherList = append(teacherList, v)
+		// 		 continue
 		// 	}
 		// 	// If filters are provided, match them.
 		// 	if (firstName != "" && v.FirstName == firstName) || (lastName != "" && v.LastName == lastName) {
-		// 		teacherList = append(teacherList, v)
+		// 		 teacherList = append(teacherList, v)
 		// 	}
 		// }
 		response := struct {
@@ -218,6 +230,45 @@ func getTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func addSorting(r *http.Request, query string) string {
+	sortParams := r.URL.Query()["sortby"] // This gets all values for the key "sortby" in slice form
+
+	// FIX: Reworked sorting logic to handle params with and without colons
+	if len(sortParams) > 0 {
+		var sortClauses []string
+		for _, param := range sortParams {
+			parts := strings.Split(param, ":")
+			var field, order string
+
+			if len(parts) == 1 {
+				// Case: sortby=id
+				field = parts[0]
+				order = "asc" // Default to ascending order
+			} else if len(parts) == 2 {
+				// Case: sortby=id:desc
+				field = parts[0]
+				order = parts[1]
+			} else {
+				// Invalid format, skip
+				continue
+			}
+
+			// FIX: Inverted validation logic. We should skip if EITHER is invalid.
+			if !isValidSortField(field) || !isValidSortOrder(order) {
+				continue
+			}
+
+			sortClauses = append(sortClauses, " "+field+" "+order)
+		}
+
+		// Only add the ORDER BY clause if we have at least one valid sort clause
+		if len(sortClauses) > 0 {
+			query += " ORDER BY"
+			query += strings.Join(sortClauses, ", ")
+		}
+	}
+	return query
+}
 func addFilters(r *http.Request, query string, args []interface{}) (string, []interface{}) {
 	params := map[string]string{
 		"first_name": "first_name",
