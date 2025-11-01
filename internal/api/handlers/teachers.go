@@ -6,36 +6,36 @@ import (
 	"fmt"
 	"gocourse/internal/models"
 	"gocourse/internal/repository/sqlconnect"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 )
 
-var (
-	teachers = make(map[int]models.Teacher) // Created a map for in memory storage ,as it searches and fetches data faster
-	mutex    = &sync.Mutex{}                // This is our database
-	netID    = 1
-)
+// var (
+// 	teachers = make(map[int]models.Teacher) // Created a map for in memory storage ,as it searches and fetches data faster
+// 	mutex    = &sync.Mutex{}                // This is our database
+// 	netID    = 1
+// )
 
-func init() {
-	teachers[netID] = models.Teacher{
-		ID:        netID,
-		FirstName: "Akash",
-		LastName:  "Kumar",
-		Class:     "10th",
-		Subject:   "Maths",
-	}
-	netID++
-	teachers[netID] = models.Teacher{
-		ID:        netID,
-		FirstName: "Raj",
-		LastName:  "Sharma",
-		Class:     "9th",
-		Subject:   "Science",
-	}
-	netID++
-}
+// func init() {
+// 	teachers[netID] = models.Teacher{
+// 		ID:        netID,
+// 		FirstName: "Akash",
+// 		LastName:  "Kumar",
+// 		Class:     "10th",
+// 		Subject:   "Maths",
+// 	}
+// 	netID++
+// 	teachers[netID] = models.Teacher{
+// 		ID:        netID,
+// 		FirstName: "Raj",
+// 		LastName:  "Sharma",
+// 		Class:     "9th",
+// 		Subject:   "Science",
+// 	}
+// 	netID++
+// }
 
 func TeacherHandler(w http.ResponseWriter, r *http.Request) {
 	// fmt.Fprintf(w, "Hello Teachers Route")
@@ -89,8 +89,9 @@ func TeacherHandler(w http.ResponseWriter, r *http.Request) {
 		// w.Write([]byte("Hello Post method on teachers route"))
 		// fmt.Println("Hello Post method on teachers route")
 	case http.MethodPut:
-		w.Write([]byte("Hello Put method on teachers route"))
-		fmt.Println("Hello Put method on teachers route")
+		updateTeacherHandler(w, r)
+		// w.Write([]byte("Hello Put method on teachers route"))
+		// fmt.Println("Hello Put method on teachers route")
 	case http.MethodPatch:
 		w.Write([]byte("Hello Patch method on teachers route"))
 		fmt.Println("Hello Patch method on teachers route")
@@ -350,4 +351,54 @@ func postTeacherHandler(w http.ResponseWriter, r *http.Request) {
 		Data:   addedTeachers,
 	}
 	json.NewEncoder(w).Encode(response)
+}
+
+// PUT /teachers/{id}
+func updateTeacherHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := strings.TrimPrefix(r.URL.Path, "/teachers/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Invalid teacher ID", http.StatusBadRequest)
+		return
+	}
+
+	var updatedTeacher models.Teacher
+	err = json.NewDecoder(r.Body).Decode(&updatedTeacher)
+
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	db, err := sqlconnect.ConnectDb()
+	if err != nil {
+		http.Error(w, "Database connection error", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	var existingTeacher models.Teacher
+
+	err = db.QueryRow("Select id,first_name,last_name,email,class,subject from teachers where id = ?", id).Scan(&existingTeacher.ID, &existingTeacher.FirstName, &existingTeacher.LastName, &existingTeacher.Email, &existingTeacher.Class, &existingTeacher.Subject)
+	if err == sql.ErrNoRows {
+		http.Error(w, "Teacher not found", http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		http.Error(w, "Unable to retrieve data", http.StatusInternalServerError)
+		return
+	}
+
+	updatedTeacher.ID = existingTeacher.ID
+
+	_, err = db.Exec("UPDATE teachers SET first_name = ?, last_name = ?, email = ?, class = ?, subject = ? WHERE id = ?", updatedTeacher.FirstName, updatedTeacher.LastName, updatedTeacher.Email, updatedTeacher.Class, updatedTeacher.Subject, id)
+	if err != nil {
+		http.Error(w, "Error Updating Teacher", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(updatedTeacher)
 }
