@@ -38,81 +38,81 @@ import (
 // 	netID++
 // }
 
-func TeacherHandler(w http.ResponseWriter, r *http.Request) {
-	// fmt.Fprintf(w, "Hello Teachers Route")
+// func TeacherHandler(w http.ResponseWriter, r *http.Request) {
+// 	// fmt.Fprintf(w, "Hello Teachers Route")
 
-	// Since there will be multiple methods and nested if condition it is better to use switch case
-	switch r.Method {
-	case http.MethodGet:
-		getTeachersHandler(w, r)
-		// w.Write([]byte("Hello GET method on teachers route"))
-		// fmt.Println("Hello GET method on teachers route")
-	case http.MethodPost:
-		postTeacherHandler(w, r)
-		// Parse the data imp for x-www-form-urlencoded
-		// err := r.ParseForm()
-		// if err != nil {
-		// 	http.Error(w, "Error parsing form", http.StatusBadRequest)
-		// 	return
-		// }
+// 	// Since there will be multiple methods and nested if condition it is better to use switch case
+// 	switch r.Method {
+// 	case http.MethodGet:
+// 		getTeachersHandler(w, r)
+// 		// w.Write([]byte("Hello GET method on teachers route"))
+// 		// fmt.Println("Hello GET method on teachers route")
+// 	case http.MethodPost:
+// 		postTeacherHandler(w, r)
+// 		// Parse the data imp for x-www-form-urlencoded
+// 		// err := r.ParseForm()
+// 		// if err != nil {
+// 		// 	http.Error(w, "Error parsing form", http.StatusBadRequest)
+// 		// 	return
+// 		// }
 
-		// fmt.Println("Form", r.Form)
+// 		// fmt.Println("Form", r.Form)
 
-		// response := make(map[string]interface{})
+// 		// response := make(map[string]interface{})
 
-		// for key, value := range r.Form {
-		// 	response[key] = value[0]
-		// }
+// 		// for key, value := range r.Form {
+// 		// 	response[key] = value[0]
+// 		// }
 
-		// fmt.Println("Processed Response", response)
+// 		// fmt.Println("Processed Response", response)
 
-		// //Raw Body
+// 		// //Raw Body
 
-		// body, err := io.ReadAll(r.Body)
+// 		// body, err := io.ReadAll(r.Body)
 
-		// if err != nil {
-		// 	return
-		// }
-		// defer r.Body.Close()
+// 		// if err != nil {
+// 		// 	return
+// 		// }
+// 		// defer r.Body.Close()
 
-		// fmt.Println("Raw Body", string(body))
+// 		// fmt.Println("Raw Body", string(body))
 
-		// // Unmarshall in case of json data
-		// var userInstance user
-		// err = json.Unmarshal(body, &userInstance)
-		// if err != nil {
-		// 	return
-		// }
+// 		// // Unmarshall in case of json data
+// 		// var userInstance user
+// 		// err = json.Unmarshal(body, &userInstance)
+// 		// if err != nil {
+// 		// 	return
+// 		// }
 
-		// fmt.Println("User Instance", userInstance)
-		// fmt.Println("Name", userInstance.Name)
+// 		// fmt.Println("User Instance", userInstance)
+// 		// fmt.Println("Name", userInstance.Name)
 
-		// w.Write([]byte("Hello Post method on teachers route"))
-		// fmt.Println("Hello Post method on teachers route")
-	case http.MethodPut:
-		updateTeacherHandler(w, r)
-		// w.Write([]byte("Hello Put method on teachers route"))
-		// fmt.Println("Hello Put method on teachers route")
-	case http.MethodPatch:
-		patchTeacherHandler(w, r)
-		// w.Write([]byte("Hello Patch method on teachers route"))
-		// fmt.Println("Hello Patch method on teachers route")
-	case http.MethodDelete:
-		deleteTeacherHandler(w, r)
-		// w.Write([]byte("Hello Delete method on teachers route"))
-		// fmt.Println("Hello Delete method on teachers route")
-	}
+// 		// w.Write([]byte("Hello Post method on teachers route"))
+// 		// fmt.Println("Hello Post method on teachers route")
+// 	case http.MethodPut:
+// 		updateTeacherHandler(w, r)
+// 		// w.Write([]byte("Hello Put method on teachers route"))
+// 		// fmt.Println("Hello Put method on teachers route")
+// 	case http.MethodPatch:
+// 		patchTeacherHandler(w, r)
+// 		// w.Write([]byte("Hello Patch method on teachers route"))
+// 		// fmt.Println("Hello Patch method on teachers route")
+// 	case http.MethodDelete:
+// 		deleteTeacherHandler(w, r)
+// 		// w.Write([]byte("Hello Delete method on teachers route"))
+// 		// fmt.Println("Hello Delete method on teachers route")
+// 	}
 
-	// if r.Method == http.MethodGet {
-	// 	w.Write([]byte("Hello GET method on teachers route"))
-	// 	fmt.Println("Hello GET method on teachers route")
-	// 	return
-	// }
+// 	// if r.Method == http.MethodGet {
+// 	// 	w.Write([]byte("Hello GET method on teachers route"))
+// 	// 	fmt.Println("Hello GET method on teachers route")
+// 	// 	return
+// 	// }
 
-	// w.Write([]byte("Hello Teachers Route"))
+// 	// w.Write([]byte("Hello Teachers Route"))
 
-	// fmt.Printf(r.Method) //http method which is sent to the route
-}
+// 	// fmt.Printf(r.Method) //http method which is sent to the route
+// }
 
 func isValidSortOrder(order string) bool {
 	return order == "asc" || order == "desc"
@@ -123,7 +123,7 @@ func isValidSortField(field string) bool {
 	return validFields[field]
 }
 
-func getTeachersHandler(w http.ResponseWriter, r *http.Request) {
+func GetTeachersHandler(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sqlconnect.ConnectDb()
 	if err != nil {
@@ -132,79 +132,101 @@ func getTeachersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	path := strings.TrimPrefix(r.URL.Path, "/teachers/")
-	idStr := strings.TrimSuffix(path, "/")
+	// path := strings.TrimPrefix(r.URL.Path, "/teachers/")
+	// idStr := strings.TrimSuffix(path, "/")
 	// fmt.Println("IDStr", idStr)
 
 	// This block handles GET /teachers and GET /teachers?first_name=...
-	if idStr == "" {
-		// firstName := r.URL.Query().Get("first_name")
-		// lastName := r.URL.Query().Get("last_name")
 
-		// if firstName != "" {
-		// 	query += " AND first_name = ?"
-		// 	args = append(args, firstName)
-		// }
-		// if lastName != "" {
-		// 	query += " AND last_name = ?"
-		// 	args = append(args, lastName)
-		// }
+	// firstName := r.URL.Query().Get("first_name")
+	// lastName := r.URL.Query().Get("last_name")
 
-		query := "SELECT id,first_name,last_name,email,class,subject from teachers WHERE 1=1"
-		var args []interface{}
+	// if firstName != "" {
+	// 	query += " AND first_name = ?"
+	// 	args = append(args, firstName)
+	// }
+	// if lastName != "" {
+	// 	query += " AND last_name = ?"
+	// 	args = append(args, lastName)
+	// }
 
-		query, args = addFilters(r, query, args)
+	query := "SELECT id,first_name,last_name,email,class,subject from teachers WHERE 1=1"
+	var args []interface{}
 
-		// r.URL.Query().Get("sortby") 	will only get the first value if multiple are provided
-		query = addSorting(r, query)
+	query, args = addFilters(r, query, args)
 
-		rows, err := db.Query(query, args...)
-		if err != nil {
-			fmt.Println(err)
-			http.Error(w, "Database Query Error", http.StatusInternalServerError)
-			return
-		}
-		defer rows.Close()
-		teacherList := make([]models.Teacher, 0)
+	// r.URL.Query().Get("sortby") 	will only get the first value if multiple are provided
+	query = addSorting(r, query)
 
-		for rows.Next() {
-			var teacher models.Teacher
-			err := rows.Scan(&teacher.ID, &teacher.FirstName, &teacher.LastName, &teacher.Email, &teacher.Class, &teacher.Subject)
-			if err != nil {
-				fmt.Println(err)
-				http.Error(w, "Database Scan Error", http.StatusInternalServerError)
-				return
-			}
-			teacherList = append(teacherList, teacher)
-		}
-
-		// FIX: Corrected filtering logic.
-		// for _, v := range teachers {
-		// 	// If no filters are provided, include everyone.
-		// 	if firstName == "" && lastName == "" {
-		// 		 teacherList = append(teacherList, v)
-		// 		 continue
-		// 	}
-		// 	// If filters are provided, match them.
-		// 	if (firstName != "" && v.FirstName == firstName) || (lastName != "" && v.LastName == lastName) {
-		// 		 teacherList = append(teacherList, v)
-		// 	}
-		// }
-		response := struct {
-			Status string           `json:"status"`
-			Count  int              `json:"count"`
-			Data   []models.Teacher `json:"data"`
-		}{
-			Status: "sucess",
-			// FIX: Count should reflect the number of items in the filtered list.
-			Count: len(teacherList),
-			Data:  teacherList,
-		}
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
-		// FIX: Added return to prevent code from falling through to the next block.
+	rows, err := db.Query(query, args...)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Database Query Error", http.StatusInternalServerError)
 		return
 	}
+	defer rows.Close()
+	teacherList := make([]models.Teacher, 0)
+
+	for rows.Next() {
+		var teacher models.Teacher
+		err := rows.Scan(&teacher.ID, &teacher.FirstName, &teacher.LastName, &teacher.Email, &teacher.Class, &teacher.Subject)
+		if err != nil {
+			fmt.Println(err)
+			http.Error(w, "Database Scan Error", http.StatusInternalServerError)
+			return
+		}
+		teacherList = append(teacherList, teacher)
+	}
+
+	// FIX: Corrected filtering logic.
+	// for _, v := range teachers {
+	// 	// If no filters are provided, include everyone.
+	// 	if firstName == "" && lastName == "" {
+	// 		 teacherList = append(teacherList, v)
+	// 		 continue
+	// 	}
+	// 	// If filters are provided, match them.
+	// 	if (firstName != "" && v.FirstName == firstName) || (lastName != "" && v.LastName == lastName) {
+	// 		 teacherList = append(teacherList, v)
+	// 	}
+	// }
+	response := struct {
+		Status string           `json:"status"`
+		Count  int              `json:"count"`
+		Data   []models.Teacher `json:"data"`
+	}{
+		Status: "sucess",
+		// FIX: Count should reflect the number of items in the filtered list.
+		Count: len(teacherList),
+		Data:  teacherList,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+	// FIX: Added return to prevent code from falling through to the next block.
+
+	// This block handles GET /teachers/{id}
+	// id, err := strconv.Atoi(idStr)
+	// if err != nil {
+	// 	http.Error(w, "Invalid teacher ID", http.StatusBadRequest)
+	// 	return
+	// }
+	// teacher, exists := teachers[id]
+	// if !exists {
+	// 	http.Error(w, "Teacher not found", http.StatusNotFound)
+	// 	return
+	// }
+
+}
+func GetTeacherHandler(w http.ResponseWriter, r *http.Request) {
+
+	db, err := sqlconnect.ConnectDb()
+	if err != nil {
+		http.Error(w, "Database connection error", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	idStr := r.PathValue("id")
 
 	// This block handles GET /teachers/{id}
 	id, err := strconv.Atoi(idStr)
@@ -292,7 +314,7 @@ func addFilters(r *http.Request, query string, args []interface{}) (string, []in
 	return query, args
 }
 
-func postTeacherHandler(w http.ResponseWriter, r *http.Request) {
+func PostTeacherHandler(w http.ResponseWriter, r *http.Request) {
 	// mutex.Lock()
 	// defer mutex.Unlock()
 
@@ -357,7 +379,7 @@ func postTeacherHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // PUT /teachers/{id}
-func updateTeacherHandler(w http.ResponseWriter, r *http.Request) {
+func UpdateTeacherHandler(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/teachers/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -410,7 +432,7 @@ func updateTeacherHandler(w http.ResponseWriter, r *http.Request) {
 
 //Mtlb hum empty fields bhi pass kar sakte h during update
 
-func patchTeacherHandler(w http.ResponseWriter, r *http.Request) {
+func PatchTeacherHandler(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/teachers/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -495,7 +517,7 @@ func patchTeacherHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func deleteTeacherHandler(w http.ResponseWriter, r *http.Request) {
+func DeleteTeacherHandler(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/teachers/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {

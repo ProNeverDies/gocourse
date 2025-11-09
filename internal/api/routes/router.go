@@ -10,16 +10,17 @@ func Router() *http.ServeMux {
 
 	mux.HandleFunc("/", handlers.RootHandler)
 
-	mux.HandleFunc("/teachers/", handlers.TeacherHandler) // Using "/teachers/" to catch all sub-paths
+	// mux.HandleFunc("/teachers/", handlers.TeacherHandler) // Using "/teachers/" to catch all sub-paths
 
-	mux.HandleFunc("GET /teachers/", handlers.TeacherHandler)
-	mux.HandleFunc("GET /teachers/{id}", handlers.TeacherHandler)
-	mux.HandleFunc("POST /teachers/", handlers.TeacherHandler)
-	mux.HandleFunc("PATCH /teachers/", handlers.TeacherHandler)
-	mux.HandleFunc("PATCH /teachers/{id}", handlers.TeacherHandler)
-	mux.HandleFunc("PUT /teachers/", handlers.TeacherHandler)
-	mux.HandleFunc("DELETE /teachers/", handlers.TeacherHandler)
-	mux.HandleFunc("DELETE /teachers/{id}", handlers.TeacherHandler)
+	mux.HandleFunc("GET /teachers/", handlers.GetTeachersHandler)
+	mux.HandleFunc("POST /teachers/", handlers.PostTeacherHandler)
+	mux.HandleFunc("PATCH /teachers/", handlers.PatchTeacherHandler)
+	mux.HandleFunc("DELETE /teachers/", handlers.DeleteTeacherHandler)
+
+	mux.HandleFunc("PUT /teachers/{id}", handlers.UpdateTeacherHandler)
+	mux.HandleFunc("DELETE /teachers/{id}", handlers.DeleteTeacherHandler)
+	mux.HandleFunc("GET /teachers/{id}", handlers.GetTeacherHandler)
+	mux.HandleFunc("PATCH /teachers/{id}", handlers.PatchTeacherHandler)
 
 	mux.HandleFunc("/students", handlers.StudentHandler)
 
