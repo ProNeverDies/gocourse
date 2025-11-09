@@ -8,6 +8,7 @@ import (
 	"gocourse/internal/repository/sqlconnect"
 	"log"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -144,7 +145,7 @@ func getTeachersHandler(w http.ResponseWriter, r *http.Request) {
 		// 	args = append(args, firstName)
 		// }
 		// if lastName != "" {
-		// 	query += " AND first_name = ?"
+		// 	query += " AND last_name = ?"
 		// 	args = append(args, lastName)
 		// }
 
@@ -448,18 +449,37 @@ func patchTeacherHandler(w http.ResponseWriter, r *http.Request) {
 
 	//APPLY UPDATES
 
-	for key, value := range updates {
-		switch key {
-		case "first_name":
-			existingTeacher.FirstName = value.(string)
-		case "last_name":
-			existingTeacher.LastName = value.(string)
-		case "email":
-			existingTeacher.Email = value.(string)
-		case "class":
-			existingTeacher.Class = value.(string)
-		case "subject":
-			existingTeacher.Subject = value.(string)
+	// for key, value := range updates {
+	// 	switch key {
+	// 	case "first_name":
+	// 		existingTeacher.FirstName = value.(string)
+	// 	case "last_name":
+	// 		existingTeacher.LastName = value.(string)
+	// 	case "email":
+	// 		existingTeacher.Email = value.(string)
+	// 	case "class":
+	// 		existingTeacher.Class = value.(string)
+	// 	case "subject":
+	// 		existingTeacher.Subject = value.(string)
+	// 	}
+	// }
+
+	teacherVal := reflect.ValueOf(&existingTeacher).Elem()
+	fmt.Println("TeacherVal field 0", teacherVal.Type().Field(0))
+	fmt.Println("TeacherVal field 1", teacherVal.Type().Field(1))
+
+	for k, v := range updates {
+		for i := 0; i < teacherVal.NumField(); i++ {
+			fmt.Println("K from the refelct mechanism", k)
+			field := teacherVal.Type().Field(i)
+			fmt.Println(field.Tag.Get("json"))
+
+			if field.Tag.Get("json") == k+",omitempty" {
+				if teacherVal.Field(i).CanSet() {
+					teacherVal.Field(i).Set(reflect.ValueOf(v).Convert(teacherVal.Field(i).Type()))
+				}
+			}
+
 		}
 	}
 
