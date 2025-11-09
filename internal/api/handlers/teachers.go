@@ -217,7 +217,7 @@ func GetTeachersHandler(w http.ResponseWriter, r *http.Request) {
 	// }
 
 }
-func GetTeacherHandler(w http.ResponseWriter, r *http.Request) {
+func GetOneTeacherHandler(w http.ResponseWriter, r *http.Request) {
 
 	db, err := sqlconnect.ConnectDb()
 	if err != nil {
@@ -432,8 +432,110 @@ func UpdateTeacherHandler(w http.ResponseWriter, r *http.Request) {
 
 //Mtlb hum empty fields bhi pass kar sakte h during update
 
-func PatchTeacherHandler(w http.ResponseWriter, r *http.Request) {
-	idStr := strings.TrimPrefix(r.URL.Path, "/teachers/")
+func PatchTeachersHandler(w http.ResponseWriter, r *http.Request) {
+	db, err := sqlconnect.ConnectDb()
+	if err != nil {
+		http.Error(w, "Database connection error", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	var updates []map[string]interface{}
+
+	err = json.NewDecoder(r.Body).Decode(&updates)
+
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+	tx, err := db.Begin() //Starts a new transacation
+	if err != nil {
+		http.Error(w, "Database transaction error", http.StatusInternalServerError)
+		return
+	}
+
+	for _, update := range updates {
+		idStr, ok := update["id"].(string)
+		if !ok {
+			http.Error(w, "Invalid or missing teacher ID", http.StatusBadRequest)
+			tx.Rollback()
+			return
+		}
+
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "Error Converting ID to Int", http.StatusBadRequest)
+			tx.Rollback()
+			return
+		}
+
+		var teacherFromDb models.Teacher
+
+		err = db.QueryRow("SELECT id,first_name,last_name,email,class,subject from teachers where id = ?", id).Scan(&teacherFromDb.ID, &teacherFromDb.FirstName, &teacherFromDb.LastName, &teacherFromDb.Email, &teacherFromDb.Class, &teacherFromDb.Subject)
+
+		if err != nil {
+			tx.Rollback()
+			if err == sql.ErrNoRows {
+				http.Error(w, fmt.Sprintf("Teacher with ID %d not found", id), http.StatusNotFound)
+				return
+			}
+			http.Error(w, "Unable to retrieve data", http.StatusInternalServerError)
+			return
+		}
+
+		//Apply updates using reflection
+
+		teacherVal := reflect.ValueOf(&teacherFromDb).Elem()
+		teacherType := teacherVal.Type()
+
+		for k, v := range update {
+			if k == "id" {
+				continue // skip updating the id field
+			}
+
+			for i := 0; i < teacherVal.NumField(); i++ {
+				field := teacherType.Field(i)
+				if field.Tag.Get("json") == k+",omitempty" {
+					fieldVal := teacherVal.Field(i)
+
+					if fieldVal.CanSet() {
+						val := reflect.ValueOf(v)
+
+						if val.Type().ConvertibleTo(fieldVal.Type()) {
+							fieldVal.Set(val.Convert(fieldVal.Type()))
+						} else {
+							log.Printf("cannot convert %v to %v", val.Type(), fieldVal.Type())
+							return
+						}
+					}
+					break
+				}
+			}
+		}
+
+		_, err = tx.Exec("UPDATE teachers SET first_name = ?, last_name = ?, email = ?, class = ?, subject = ? WHERE id = ?", teacherFromDb.FirstName, teacherFromDb.LastName, teacherFromDb.Email, teacherFromDb.Class, teacherFromDb.Subject, id)
+
+		if err != nil {
+			tx.Rollback()
+			http.Error(w, "Error Updating Teacher", http.StatusInternalServerError)
+			return
+		}
+
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		http.Error(w, "Database commit error", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func PatchOneTeacherHandler(w http.ResponseWriter, r *http.Request) {
+	// idStr := strings.TrimPrefix(r.URL.Path, "/teachers/")
+	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		log.Println(err)
@@ -518,7 +620,8 @@ func PatchTeacherHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteTeacherHandler(w http.ResponseWriter, r *http.Request) {
-	idStr := strings.TrimPrefix(r.URL.Path, "/teachers/")
+	// idStr := strings.TrimPrefix(r.URL.Path, "/teachers/")
+	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		log.Println(err)
